@@ -1,3 +1,6 @@
+
+![2025-02-20 15_49_37-yolo pdf and 1 more page - Personal - Microsoft​ Edge](https://github.com/user-attachments/assets/2a451c01-4f92-48cf-a0c7-05212b05a7db)
+
 ## Overview
 This repository contains an implementation of the YOLO (You Only Look Once) object detection system, based on the research paper "YOLO: Unified, Real-Time Object Detection" by Joseph Redmon, Santosh Divvala, Ross Girshick, and Ali Farhadi ([link to the paper](https://arxiv.org/abs/1506.026403)). YOLO is a state-of-the-art, real-time object detection system that reframes object detection as a single regression problem, directly predicting bounding boxes and class probabilities from full images in one evaluation. Its unified architecture allows for fast and accurate detection, suitable for applications such as autonomous driving, robotics, and assistive devices.
 
