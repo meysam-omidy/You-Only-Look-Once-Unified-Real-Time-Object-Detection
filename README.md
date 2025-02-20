@@ -14,6 +14,31 @@ To run the code, ensure you have the following dependencies installed:
 - Pytorch
 
 ## Usage
+for training:
+```
+from yolo import YOLO
+from loss import YOLO_Loss
 
+model = YOLO()
+yolo_loss = YOLO_Loss(5, 0.5)
+# get images with shape(batch, 3, 448, 448)
+# get main boxes with shape (batch, n, 4)
+# get grid_probs_main with shape (batch, n, 7, 7, 20)
+boxes, boxes_confidence, grid_probs = model(images)
+for i in range(batch):
+    loss = yolo_loss(main_boxes[i] boxes[i], boxes_confidence[i], grid_probs_main[i], grid_probs[i])
+    loss.backward()
+```
+for inference:
+```
+from yolo import YOLO
+from utils import postprocess
+
+model = YOLO()
+# get images with shape(batch, 3, 448, 448)
+boxes, boxes_confidence, grid_probs = model(images)
+for i in range(batch):
+    final_boxes = postprocess(boxes[i], boxes_confidence[i], grid_probs[i], 0.7)
+```
 
   
