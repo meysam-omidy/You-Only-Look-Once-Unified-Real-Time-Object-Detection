@@ -30,7 +30,7 @@ def extract_real_boxes(yolo_pred_boxes, xywh_form=True):
         yolo_pred_boxes[:, :, :, 2:4] = yolo_pred_boxes[:, :, :, 0:2] + yolo_pred_boxes[:, :, :, 2:4]
     return yolo_pred_boxes
 
-def non_maximum_suppression(boxes, threshold):
+def non_maximum_suppression(boxes, confidences, threshold):
     iou = batch_iou(boxes, boxes)
     final_boxes_indexes = []
     for i in range(len(boxes)):
@@ -39,8 +39,9 @@ def non_maximum_suppression(boxes, threshold):
             final_boxes_indexes.append(i)
         else:
             threshed_boxes = boxes[list(threshed_indexes)]
+            threshed_confidences = boxes[list(threshed_indexes)]
             threshed_boxes_square = (threshed_boxes[:, 2] - threshed_boxes[:, 0])  * (threshed_boxes[:, 3] - threshed_boxes[:, 1])
-            if ((boxes[i, 2] - boxes[i, 0])  * (boxes[i, 3] - boxes[i, 1]) > threshed_boxes_square).all():
+            if (confidences[i] > threshed_confidences).all() or ((boxes[i, 2] - boxes[i, 0])  * (boxes[i, 3] - boxes[i, 1]) > threshed_boxes_square).all():
                 final_boxes_indexes.append(i)
     return np.array(final_boxes_indexes)
 
@@ -50,10 +51,20 @@ def postprocess(boxes, boxes_confidence, grid_probs, threshold):
     boxes_confidence = boxes_confidence.detach().cpu().numpy().reshape(-1)
     grid_probs = grid_probs.detach().cpu().numpy().argmax(axis=-1).reshape(s, s, 1)
     classes = np.concatenate([grid_probs, grid_probs], axis=-1).reshape(-1)
-    final_boxes_indexes = non_maximum_suppression(boxes, threshold)
-    final_boxes_indexes = final_boxes_indexes[np.where(np.all(boxes[final_boxes_indexes] > 0, axis=-1))[0]]
+    final_boxes_indexes = non_maximum_suppression(boxes, boxes_confidence, threshold)
+    final_boxes_indexes = final_boxes_indexes[np.where(logical_and(
+        np.all(boxes[final_boxes_indexes] > 0, axis=-1), 
+        boxes[final_boxes_indexes][:, 0] < boxes[final_boxes_indexes][:, 2],
+        boxes[final_boxes_indexes][:, 1] < boxes[final_boxes_indexes][:, 3]
+        ))[0]]
     final_boxes = np.zeros(shape=(len(final_boxes_indexes), 6))
     for i in range(len(final_boxes_indexes)):
         xt, yt, xb, yb = boxes[final_boxes_indexes[i]]
         final_boxes[i] = [xt, yt, xb, yb, boxes_confidence[final_boxes_indexes[i]], classes[final_boxes_indexes[i]]]
     return final_boxes
+
+def logical_and(*arrays):
+    out = np.array([True for i in range(len(arrays[0]))])
+    for array in arrays:
+        out = np.logical_and(out, array)
+    return out
